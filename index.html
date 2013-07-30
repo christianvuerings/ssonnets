@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html data-ng-app="ssonnets">
+  <head>
+    <meta charset="utf-8" />
+    <title>Shakespeare Sonnets | SSonnets</title>
+
+    <style>
+      * {
+        color: #333;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-weight: 200;
+        margin: 0;
+        padding: 0;
+      }
+      *, *:before, *:after {
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+      body {
+        background: #f8f8f8;
+        padding: 5px;
+        font-size: 14px;
+      }
+      h1 {
+        font-weight: 100;
+      }
+      h1 a {
+        display: block;
+        padding: 0 5px;
+      }
+      a {
+        text-decoration: none;
+      }
+      a:hover, a:focus {
+        background: #fff;
+        text-decoration: underline;
+      }
+      .list {
+        list-style-type: none;
+        margin-top: 5px;
+
+      }
+      .list li a {
+        display: block;
+        padding: 5px;
+
+        /* Ellipsis */
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .list li a:hover {
+        background: #fff;
+      }
+      .search {
+        border: none;
+        font-size: 16px;
+        font-weight: 200;
+        margin-top: 5px;
+        padding: 5px;
+        width: 100%;
+      }
+      .sonnet {
+        margin-top: 10px;
+      }
+      .sonnet ul {
+        list-style-type: none;
+      }
+      .sonnet li {
+        padding: 2px 5px;
+      }
+      .sonnet li:nth-last-child(-n+2) {
+        margin-left: 10px;
+      }
+      .sonnet-number {
+        font-size: 16px;
+      }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+  </head>
+  <body data-ng-controller="MainController">
+
+    <div ng-view></div>
+
+    <script type="text/ng-template" id="header.html">
+      <h1>
+        <a href="/#/">SSonnets <span class="sonnet-number" data-ng-show="sonnet.number" data-ng-bind-template="#{{sonnet.number}}"></span></a>
+      </h1>
+    </script>
+
+    <script type="text/ng-template" id="main.html">
+      <div data-ng-include src="'header.html'"></div>
+      <form>
+        <input class="search" placeholder="Search" data-ng-model="search" data-ng-bind="search.$" />
+      </form>
+      <ul class="list">
+        <li data-ng-repeat="sonnet in sonnets | filter: search">
+          <a data-ng-href="#/sonnet/{{sonnet.number}}" data-ng-bind-template="{{sonnet.number}}. {{sonnet.lines[0]}}"></a>
+        </li>
+      </ul>
+    </script>
+
+    <script type="text/ng-template" id="sonnet.html">
+      <div data-ng-include src="'header.html'"></div>
+      <div class="sonnet">
+        <ul>
+          <li data-ng-repeat="line in sonnet.lines" data-ng-bind="line" />
+        </ul>
+      </div>
+    </script>
+
+    <script>
+      // Initialization
+      (function(window, angular) {
+
+        'use strict';
+
+        window.ssonnets = angular.module('ssonnets', []);
+
+      })(window, window.angular);
+
+      // Configuration - location
+      (function(ssonnets) {
+
+        'use strict';
+
+        ssonnets.config(['$locationProvider', function($locationProvider) {
+          //$locationProvider.html5Mode(true).hashPrefix('!');
+        }]);
+
+      })(window.ssonnets);
+
+      // Configuration - routes
+      (function(ssonnets) {
+
+        'use strict';
+
+        // Set the configuration
+        ssonnets.config(['$routeProvider', function($routeProvider) {
+
+          // List all the routes
+          $routeProvider.when('/', {
+            templateUrl: 'main.html'
+          }).
+          when('/sonnet/:number', {
+            templateUrl: 'sonnet.html',
+            controller: 'SonnetController'
+          }).
+          // Redirect to a 404 page
+          otherwise({
+            templateUrl: '404.html',
+            controller: 'ErrorController',
+            isPublic: true
+          });
+
+        }]);
+
+      })(window.ssonnets);
+
+      // Controller - Main
+      (function(ssonnets) {
+
+        'use strict';
+
+        ssonnets.controller('MainController', function($http, $scope) {
+          $http.get('sonnets.json').success(function(data) {
+            $scope.sonnets = data;
+          })
+        });
+
+      })(window.ssonnets);
+
+      // Controller - Sonnet
+      (function(ssonnets) {
+
+        'use strict';
+
+        ssonnets.controller('SonnetController', function($scope, $routeParams) {
+
+          $scope.$watch('sonnets', function(sonnets) {
+            if (sonnets) {
+              $scope.sonnet = sonnets.filter(function(element) {
+                return element.number === $routeParams.number;
+              })[0];
+            }
+          })
+
+        });
+
+      })(window.ssonnets);
+
+    </script>
+  </body>
+</html>
